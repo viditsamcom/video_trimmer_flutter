@@ -89,17 +89,22 @@ class ScrollableThumbnailViewer extends StatelessWidget {
                           Opacity(
                             opacity: 0.2,
                             child: Image.memory(
-                              imageBytes[0] ?? kTransparentImage,
+                              imageBytes.firstWhere(
+                                    (e) => e != null,
+                                orElse: () => kTransparentImage,
+                              ) ??
+                                  kTransparentImage,
                               fit: fit,
                             ),
                           ),
+
                           index < imageBytes.length && imageBytes[index] != null
                               ? FadeInImage(
-                                  placeholder: MemoryImage(kTransparentImage),
-                                  image: MemoryImage(imageBytes[index]!),
-                                  fit: fit,
-                                )
-                              : const SizedBox(),
+                            placeholder: MemoryImage(kTransparentImage),
+                            image: MemoryImage(imageBytes[index]!),
+                            fit: fit,
+                          )
+                              : Container(color: Colors.black),
                         ],
                       ),
                     ),
