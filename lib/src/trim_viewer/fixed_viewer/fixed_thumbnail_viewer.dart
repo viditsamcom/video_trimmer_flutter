@@ -59,46 +59,62 @@ class FixedThumbnailViewer extends StatelessWidget {
         quality: quality,
         onThumbnailLoadingComplete: onThumbnailLoadingComplete,
       ),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          List<Uint8List?> imageBytes = snapshot.data!;
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || snapshot.data == null || snapshot.data!.isEmpty) {
+            return Container(
+              color: Colors.grey[900],
+              height: thumbnailHeight,
+              width: double.infinity,
+            );
+          }
+
+          final imageBytes = snapshot.data!;
+
           return Row(
             mainAxisSize: MainAxisSize.max,
             children: List.generate(
               numberOfThumbnails,
-              (index) => SizedBox(
-                height: thumbnailHeight,
-                width: thumbnailHeight,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Opacity(
-                      opacity: 0.2,
-                      child: Image.memory(
-                        imageBytes[0] ?? kTransparentImage,
-                        fit: fit,
+                  (index) {
+                final Uint8List? bytes =
+                index < imageBytes.length ? imageBytes[index] : null;
+
+                return SizedBox(
+                  height: thumbnailHeight,
+                  width: thumbnailHeight,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      /// background blur / opacity layer (safe)
+                      Opacity(
+                        opacity: 0.2,
+                        child: Image.memory(
+                          imageBytes.firstWhere(
+                                (e) => e != null,
+                            orElse: () => kTransparentImage,
+                          ) ??
+                              kTransparentImage,
+                          fit: fit,
+                        ),
                       ),
-                    ),
-                    index < imageBytes.length
-                        ? FadeInImage(
-                            placeholder: MemoryImage(kTransparentImage),
-                            image: MemoryImage(imageBytes[index]!),
-                            fit: fit,
-                          )
-                        : const SizedBox(),
-                  ],
-                ),
-              ),
+
+                      /// foreground thumbnail (SAFE)
+                      if (bytes != null)
+                        FadeInImage(
+                          placeholder: MemoryImage(kTransparentImage),
+                          image: MemoryImage(bytes),
+                          fit: fit,
+                        )
+                      else
+                        Container(
+                          color: Colors.black,
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
           );
-        } else {
-          return Container(
-            color: Colors.grey[900],
-            height: thumbnailHeight,
-            width: double.maxFinite,
-          );
         }
-      },
     );
   }
 }
